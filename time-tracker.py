@@ -12,7 +12,7 @@ import codecs
 import keyboard
 import threading
 import subprocess
-import matplotlib.pyplot as plt
+from pylab import title, figure, xlabel, ylabel, xticks, bar, legend, axis, savefig
 
 def get_active_window_title():
     # Returns the title of the window in focus using the `xprop` command
@@ -33,7 +33,9 @@ def get_active_window_title():
     return None
 
 
-class Tracker ():
+class Tracker():
+    date = ''
+    time = ''
     project_name = ''
     edited = []
     research_names = []
@@ -43,12 +45,15 @@ class Tracker ():
     research_time = []
     
     def __init__(self, pname = get_active_window_title()):
+        self.date = time.strftime('%b %d, %Y') # 'Oct 18, 2010'
+        self.time = time.strftime('%I:%M%p') # '1:36PM'
         self.project_name = pname.split(' - ')[1]
     
     def __str__(self):
         return self.project_name
     
     def process(self):
+        global sleep
         time = {
             'active_start': self.active_time.pop(0),
             'active_end': self.active_time.pop(-1),
@@ -63,7 +68,7 @@ class Tracker ():
                 for research_pair in self.research_time.slice[0::3]:
                     if not len(research_pair) == 1:
                         
-                        if break_pair[0] + 10 == research_pair[0]:
+                        if break_pair[0] + sleep == research_pair[0]:
                             time['research'] += research_pair[1] - research_pair[0]
                             self.research_time.pop(research_pair[0])
                             self.research_time.pop(research_pair[1])
@@ -73,9 +78,23 @@ class Tracker ():
                             self.active_time.pop(break_pair[0])
                             self.active_time.pop(break_pair[1])
         
-        active = time['active_end'] - time['active_start']
+        active = (time['active_end'] - time['active_start']) - time['research'] - time['breaks']
         self.active = active / 60 if active / 60 < 60 else active / 60 / 60
         self.research = time['research'] / 60 if time['research'] / 60 < 60 else time['research'] / 60 / 60
+    
+    def save_data(self, history):
+        history.projects.append(self)
+
+
+class History():
+    date = ''
+    projects = []
+    
+    def __init__(self):
+        self.date = time.strftime('%b %d, %Y') # 'Oct 18, 2010'
+    
+    def __str__(self):
+        return self.date
     
     def save_data(self, dir = '~/Documents', fname = '.time-track.json'):
         json_object = json.dumps(self, indent = 4)
@@ -98,12 +117,28 @@ class Tracker ():
         dataframe = pandas.DataFrame()
         dataframe['minutes'] = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
         dataframe['hours'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        bins = 1 + len(self.research_names)
-        dataframe['time'] = dataframe['hours'] if type(self.active_time) == float else dataframe['minutes']
-        dataframe['active'] = self.active_time
-        dataframe['research'] = self.research_time
-        dataframe['sites'] = self.research_names
-        plt.history(time, bins, objects = self)
+        
+        for project in self.projects:
+            if time.strftime('%b %d, %Y') == project.date:
+                dataframe['time'] = dataframe['hours'] if type(project.active_time) == float else dataframe['minutes']
+                dataframe['active'] = (project.project_name, project.active_time,)
+                dataframe['research'] = (project.project_name, project.research_time,)
+                dataframe['sites'] = (project.project_name, project.research_names,)
+                
+                title("Coding Time Tracker")
+                xlabel('Coding & Research')
+                ylabel('Time')
+                
+                c = [2.0, 4.0, 6.0, 8.0]
+                m = [x - 0.5 for x in c]
+
+                xticks(c, dataframe['Question'])
+
+                bar(m, dataframe['active'], width=0.5, color="#91eb87", label="Mike")
+                bar(c, dataframe['research'], width=0.5, color="#eb879c", label="Charles")
+    
+    def generate_report(date = time.strftime('%b %d, %Y'), project_name = ''):
+        pass
 
 
 def xprop_exists(): 
@@ -142,67 +177,69 @@ def keyboard_monitor():
             timeout = time.time() + 180
 
 
-def focus_monitor(obj):
+def focus_monitor(tracker_obj, history_obj):
     # Tracks the time spent in an application window (Linux only currently)
+    global sleep
     browsers = ['Firefox', 'Chrome', 'Safari', 'Opera', 'Edge', 'Internet Explorer',]
-    if(xprop_exists):
-        
+    if(xprop_exists()):
+        # If xprop exists, it is a linux machine
         if(check_process_running('code')):
-            # 
+            # If code is running, record the start time
             if('Visual Studio Code' in get_active_window_title()):
-                obj.active_time.append(toggle_timer())
+                tracker_obj.active_time.append(toggle_timer())
                 idle = False
                 recorded = False
-                dash = ' {en dash} '.encode('utf8')
+                # Continue as long as VSCode is running
                 while(check_process_running('code')):
-                    time.sleep(3)
+                    time.sleep(sleep)
                     active_window = get_active_window_title()
                     
                     if('Visual Studio Code' in active_window):
+                        # Disassemble the active window title in order to get the file being edited and project name
                         f, project, app = active_window.split(' - ')
                         print('\n' + f + '  ' + project + '  ' + app + '\n')
-                        obj.project_name = project
                         
-                        if(f not in obj.edited):
-                            obj.edited.append(f)
-                            
-                    
-                    # if('Visual Studio Code' not in active_window):
-                    #     s = re.match('/\s\W+_?\s/', active_window)
-                    #     sub, org, app = active_window.split(' - ')
-                    #     print('\n' + sub + ' ' + org + ' ' + app + '\n')
+                        if project not in tracker_obj.project_name:
+                            history_obj.append(tracker_obj)
+                            tracker_obj = Tracker(pname = project)
+                        
+                        if(f not in tracker_obj.edited):
+                            tracker_obj.edited.append(f)
                     
                     if(not 'Visual Studio Code' in active_window and not idle):
-                        obj.active_time.append(toggle_timer())
+                        tracker_obj.active_time.append(toggle_timer())
                         idle = True
                     
                     elif('Visual Studio Code' in active_window and idle):
-                        obj.active_time.append(toggle_timer())
-                        obj.research_time.append(toggle_timer())
+                        tracker_obj.active_time.append(toggle_timer())
+                        tracker_obj.research_time.append(toggle_timer())
                         idle = False
                         recorded = False
                     
                     elif('Visual Studio Code' not in active_window and idle and not recorded):
                         print(active_window)
-                        obj.research_time.append(toggle_timer())
-                        if(active_window.split(dash)[-1] in browsers):
-                            obj.research_names.append(f"{active_window.split(dash.decode('utf8'))[-2]} -> {active_window.split(dash)[-1]}")
+                        tracker_obj.research_time.append(toggle_timer())
+                        if(active_window in browsers):
+                            tracker_obj.research_names.append(f"{active_window}")
                             recorded = True
                     
-                    elif('Visual Studio Code' not in active_window and active_window.split(dash)[0] not in obj.research_name):
-                        obj.research_names.append(f"{active_window.split(' -- ')[-2]} -> {active_window.split(' -- ')[-1]}")
-                    print(obj.project_name)
-                    print(obj.active_time)
-                    print(obj.research_time)
-                    print(obj.research_names)
-            obj.process()
-            obj.report()
-            exit()
+                    elif('Visual Studio Code' not in active_window and active_window not in tracker_obj.research_names):
+                        tracker_obj.research_names.append(f"{active_window}")
+                    print(tracker_obj.project_name)
+                    print(tracker_obj.active_time)
+                    print(tracker_obj.research_time)
+                    print(tracker_obj.research_names)
+                
+                tracker_obj.process()
+                tracker_obj.save_data(history_obj)
+                history_obj.save_data()
+                exit()
 
 
 if __name__ == "__main__":
+    sleep = 3
     timeout = time.time() + 180
-    
+    projects = History()
     tracker = Tracker()
     # thread1 = threading.Thread(target = keyboard_monitor)
     thread2 = threading.Thread(target = focus_monitor, args = (tracker,))
