@@ -1,13 +1,18 @@
-import sys
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import os
 import re
 import time
 import json
+import fpdf
+import pandas
 import psutil
-import platform
+import codecs
+import keyboard
 import threading
 import subprocess
-import keyboard
+import matplotlib.pyplot as plt
 
 def get_active_window_title():
     # Returns the title of the window in focus using the `xprop` command
@@ -29,17 +34,19 @@ def get_active_window_title():
 
 
 class Tracker ():
-    name = ''
+    project_name = ''
+    edited = []
+    research_names = []
     active = 0
     research = 0
     active_time = [] 
     research_time = []
     
-    def __init__(self, name = get_active_window_title()):
-        self.name = name
+    def __init__(self, pname = get_active_window_title()):
+        self.project_name = pname.split(' - ')[1]
     
     def __str__(self):
-        return self.name
+        return self.project_name
     
     def process(self):
         time = {
@@ -70,15 +77,33 @@ class Tracker ():
         self.active = active / 60 if active / 60 < 60 else active / 60 / 60
         self.research = time['research'] / 60 if time['research'] / 60 < 60 else time['research'] / 60 / 60
     
-    def report(self, dir = '~/Documents'):
+    def save_data(self, dir = '~/Documents', fname = '.time-track.json'):
         json_object = json.dumps(self, indent = 4)
-        jreport = os.join.path(dir, 'report.json')
+        if '~/Documents' == dir:
+            dir = os.path.join(dir, 'timetracker')
+            if not os.exists(dir):
+                os.makedir(dir)
+                os.chdir(dir)
+        
+        jreport = os.join.path(dir, fname)
         if os.exists(jreport):
             with open(jreport, 'a') as doc:
                 doc.write(json_object)
         else:
             with open(jreport, 'w') as doc:
                 doc.write(json_object)
+        self.create_pdf()
+    
+    def create_pdf(self, dir = '~/Documents/timetracker', fname = 'time-track'):
+        dataframe = pandas.DataFrame()
+        dataframe['minutes'] = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
+        dataframe['hours'] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        bins = 1 + len(self.research_names)
+        dataframe['time'] = dataframe['hours'] if type(self.active_time) == float else dataframe['minutes']
+        dataframe['active'] = self.active_time
+        dataframe['research'] = self.research_time
+        dataframe['sites'] = self.research_names
+        plt.history(time, bins, objects = self)
 
 
 def xprop_exists(): 
@@ -118,41 +143,58 @@ def keyboard_monitor():
 
 
 def focus_monitor(obj):
-    # Tracks the time spent in an application window
+    # Tracks the time spent in an application window (Linux only currently)
+    browsers = ['Firefox', 'Chrome', 'Safari', 'Opera', 'Edge', 'Internet Explorer',]
     if(xprop_exists):
-        name = get_active_window_title()
         
-        if('Visual Studio Code' in name):
-            obj.active_time.append(toggle_timer())
-            idle = False
-            recorded = False
-            
-            while(check_process_running('code')):
-                time.sleep(10)
-                active_window = get_active_window_title()
-                if(not 'Visual Studio Code' in active_window and not idle):
-                    print('line 75')
-                    obj.active_time.append(toggle_timer())
-                    print(f'active stop: {obj.active_time}')
-                    idle = True
-                
-                elif('Visual Studio Code' in active_window and idle):
-                    print('line 81')
-                    obj.active_time.append(toggle_timer())
-                    obj.research_time.append(toggle_timer())
-                    print(f'active start: {obj.active_time}')
-                    print(f'research end: {obj.research_time}')
-                    idle = False
-                    recorded = False
-                
-                elif('Mozilla Firefox' in active_window and idle and not recorded):
-                    obj.research_time.append(toggle_timer())
-                    print(f'research start: {obj.research_time}')
-                    recorded = True
-
-                print('line 82')
-                print(active_window)
-                print(obj.active_time)
+        if(check_process_running('code')):
+            # 
+            if('Visual Studio Code' in get_active_window_title()):
+                obj.active_time.append(toggle_timer())
+                idle = False
+                recorded = False
+                dash = ' {en dash} '.encode('utf8')
+                while(check_process_running('code')):
+                    time.sleep(3)
+                    active_window = get_active_window_title()
+                    
+                    if('Visual Studio Code' in active_window):
+                        f, project, app = active_window.split(' - ')
+                        print('\n' + f + '  ' + project + '  ' + app + '\n')
+                        obj.project_name = project
+                        
+                        if(f not in obj.edited):
+                            obj.edited.append(f)
+                            
+                    
+                    # if('Visual Studio Code' not in active_window):
+                    #     s = re.match('/\s\W+_?\s/', active_window)
+                    #     sub, org, app = active_window.split(' - ')
+                    #     print('\n' + sub + ' ' + org + ' ' + app + '\n')
+                    
+                    if(not 'Visual Studio Code' in active_window and not idle):
+                        obj.active_time.append(toggle_timer())
+                        idle = True
+                    
+                    elif('Visual Studio Code' in active_window and idle):
+                        obj.active_time.append(toggle_timer())
+                        obj.research_time.append(toggle_timer())
+                        idle = False
+                        recorded = False
+                    
+                    elif('Visual Studio Code' not in active_window and idle and not recorded):
+                        print(active_window)
+                        obj.research_time.append(toggle_timer())
+                        if(active_window.split(dash)[-1] in browsers):
+                            obj.research_names.append(f"{active_window.split(dash.decode('utf8'))[-2]} -> {active_window.split(dash)[-1]}")
+                            recorded = True
+                    
+                    elif('Visual Studio Code' not in active_window and active_window.split(dash)[0] not in obj.research_name):
+                        obj.research_names.append(f"{active_window.split(' -- ')[-2]} -> {active_window.split(' -- ')[-1]}")
+                    print(obj.project_name)
+                    print(obj.active_time)
+                    print(obj.research_time)
+                    print(obj.research_names)
             obj.process()
             obj.report()
             exit()
