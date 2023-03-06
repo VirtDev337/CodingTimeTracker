@@ -24,19 +24,16 @@ def xprop_exists():
 
 
 def toggle_timer():
-    # print('toggle_timer', time.time())
     # Returns the start and stop times when VSCode loses focus and regains it
     return time.time()
 
 
-def get_vscode_workspace_directory(name):
-    # print('get_vscode_workspace_directory')
+def get_ide_workspace_directory(name):
     return name.split(' - ')[1]
 
 
 def check_process_running(process_name):
     process_name = process_name.lower()
-    # print('check_process_running: %s' % process_name)
     # Checking if there is any running process that contains the given name process_name.
     # Iterate over the running processes
     for proc in psutil.process_iter():
@@ -47,6 +44,15 @@ def check_process_running(process_name):
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, AttributeError):
             pass
     return False
+
+
+def generate_report(date=time.strftime('%b %d, %Y'), project_name='', dir='~/Documents/timetracker'):
+    jfile = os.path.join(dir, '.timetrack.json')
+    with open(jfile, 'r') as doc:
+        project_data = json.loads(doc)
+        for key in project_data.keys():
+            if project_name in key:
+                pass
 
 
 def keyboard_monitor():
@@ -62,23 +68,29 @@ def focus_monitor(tracker_obj):
     print('focus_monitor')
     # Tracks the time spent in an application window (Linux only currently)
     global sleep
-    browsers = ['Firefox', 'Chrome', 'Safari',
-                'Opera', 'Edge', 'Internet Explorer',]
+    browsers = [
+        'Firefox',
+        'Chrome',
+        'Safari',
+        'Opera',
+        'Edge',
+        'Internet Explorer',
+    ]
     if (xprop_exists()):
         # If xprop exists, it is a linux machine
-        if (check_process_running('code')):
+        if (check_process_running('code') or check_process_running('codium')):
             # print(get_active_window_title())
             # If code is running, record the start time
-            if ('Visual Studio Code' in get_active_window_title()):
+            if ('Visual Studio Code' in get_active_window_title() or 'VSCodium' in get_active_window_title):
                 tracker_obj.active_time.append(toggle_timer())
                 idle = False
                 recorded = False
                 # Continue as long as VSCode is running
-                while (check_process_running('code')):
+                while (check_process_running('code') or check_process_running('codium')):
                     time.sleep(sleep)
                     active_window = get_active_window_title()
                     # print(active_window)
-                    if ('Visual Studio Code' in active_window):
+                    if ('Visual Studio Code' in active_window or 'VSCodium' in active_window):
                         # Disassemble the active window title in order to get the file being edited and project name
                         document, project, app = active_window.split(' - ')
                         # print('\n' + document + '  ' +
@@ -156,3 +168,76 @@ if __name__ == "__main__":
                 # generate_report(date, project)
         except:
             pass
+
+
+# if __name__ == "__main__":
+#     sleep = 3
+#     TIMEOUT = time.time() + 180
+#     DIR = '~/Documents/timetracker'
+#     # if (not os.path.exists(os.path.join(DIR, 'timetracker.db'))):
+#     #     create_db()
+#     projects = History()
+#     tracker = Tracker()
+#     if not sys.argv:
+#         # thread1 = threading.Thread(target = keyboard_monitor)
+#         thread2 = threading.Thread(
+#             target=focus_monitor, args=(tracker, projects))
+#         # thread1.start()
+#         # print('thread 1 started')
+#         thread2.start()
+#         print('thread 2 started')
+#     else:
+#         try:
+#             args, opts, lopts = getopt.getopt(sys.argv)
+#             if opts or lopts:
+#                 if 'h' in opts or '?' in optparse or 'help' in lopts:
+#                     show_help()
+#             if args:
+#                 date = args[0]
+#                 project = args[1]
+#                 generate_report(date, project)
+#         except:
+#             pass
+
+
+# FIXME: Track key presses, without recording them
+# DONE: Accesses and records the directory being accessed (to differentiate between projects)
+# FIXME: Ability to edit the project name
+# DONE: Keeps track of web access (whether a browser is in focus) for research and tracks the time seperately.
+# TODO: Record site URI for time tracking
+# ToDo: When vscode is closed, assemble data into json and write to new/existing file
+# ToDo: Assemble report for viewing (cli command? pdf? calc? md?)
+
+'''
+class MyClass():
+    def __init__(self, param):
+        self.param = param
+
+
+def save(key, value, cache_file="cache.sqlite3"):
+    try:
+        with SqliteDict(cache_file) as mydict:
+            mydict[key] = value  # Using dict[key] to store
+            mydict.commit()  # Need to commit() to actually flush the data
+    except Exception as ex:
+        print("Error during storing data (Possibly unsupported):", ex)
+
+
+def load(key, cache_file="cache.sqlite3"):
+    try:
+        with SqliteDict(cache_file) as mydict:
+            # No need to use commit(), since we are only loading data!
+            value = mydict[key]
+        return value
+    except Exception as ex:
+        print("Error during loading data:", ex)
+
+
+obj1 = MyClass(10)
+save("MyClass_key", obj1)
+
+obj2 = load("MyClass_key")
+
+print(obj1.param, obj2.param)
+print(isinstance(obj1, MyClass), isinstance(obj2, MyClass))
+'''
