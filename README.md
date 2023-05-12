@@ -10,3 +10,5 @@
      - Installation script to simplify the process.
      - Packaging, to remove the dependency on the system it is installed.
      - Add support for other IDE applications.
+
+<iframe src="https://github.com/sponsors/VirtDev337/card" title="Sponsor" height="225" width="600" style="border: 0;"></iframe>
