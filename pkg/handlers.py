@@ -1,5 +1,6 @@
 import argparse
-import pkg.codetime as codetime
+from pkg.trackers import CodeTimeTracker
+from pkg.codetime import CodeTime
 import os
 import time
 import psutil as util
@@ -11,7 +12,7 @@ from pathlib import Path
 
 class VSCodeHandler(events.FileSystemEventHandler):
     def __init__(self, codetime):
-        self.codetime = codetime.CodeTimeTracker()
+        self.codetime = CodeTime()
 
     def on_created(self, event):
         project_name = os.path.basename(os.getcwd())
@@ -28,7 +29,7 @@ class VSCodeHandler(events.FileSystemEventHandler):
         else:
             print('Detected VSCode startup for project:', project_name)
             project_name = input(
-                'Enter project name or press enter to use default:'
+                'Enter project name or press enter to use default (project directory):'
             )
 
             if not project_name:
@@ -52,7 +53,7 @@ class VSCodeHandler(events.FileSystemEventHandler):
         observer.start()
 
     def on_closed(self, event, project_name=os.getcwd()):
-        if os.path.basename(event.src_path) == self.codetime.projects_dir:
+        if os.path.basename(event.src_path) == self.project.name:
             project = self.codetime.get_project(project_name)
             project.add_time_spent(time.time() - project.start_time)
             project.update_last_modified(project.date)

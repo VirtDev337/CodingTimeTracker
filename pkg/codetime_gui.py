@@ -1,6 +1,6 @@
 from pgi.repository import Gtk as gtk
 import pgi
-import pkg.codetime as codetime
+import pkg.trackers as trackers
 
 # GTK frontend
 pgi.require_version('Gtk', '3.0')
@@ -62,17 +62,17 @@ class MainWindow(gtk.Window):
         project_name = self.project_entry.get_text()
         start_time = self.start_time_entry.get_text()
         end_time = self.end_time_entry.get_text()
-        codetime.start_project(
+        trackers.start_project(
             project_name,
             start_time,
             end_time
         )
 
     def on_stop_clicked(self, widget):
-        codetime.stop_project()
+        trackers.stop_project()
 
     def on_save_clicked(self, widget):
-        codetime.save_projects()
+        trackers.save_projects()
 
     def on_report_clicked(self, widget):
         report_window = ReportWindow()
@@ -121,7 +121,7 @@ class ReportWindow(gtk.Window):
     def on_generate_clicked(self, widget):
         project_name = self.project_entry.get_text()
         date_time = self.date_entry.get_text()
-        codetime.generate_report(project_name, date_time)
+        trackers.generate_report(project_name, date_time)
 
     def on_close_clicked(self, widget):
         self.destroy()
