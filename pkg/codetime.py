@@ -2,6 +2,7 @@ import handlers
 import json
 import os
 import time
+import re
 import watchdog.observers as observers
 
 from datetime import date, datetime, timedelta
@@ -81,6 +82,7 @@ class CodeTime:
     def get_project(self, name):
         if name not in self.projects:
             self.projects[name] = Project(name)
+
         return self.projects[name]
 
     def delete_project(self, project_name):
@@ -105,6 +107,14 @@ class CodeTime:
         )
         with open(path, 'r') as file:
             self.projects = json.load(file)
+
+    def project_status(self, project_name):
+        project = self.get_project(project_name)
+        print(project['name'] + "\n")
+
+        for key in project:
+            if re.fullmatch('name|dir|created|complete|date|time_spent|last_modified_date', key):
+                print(key + ": " + self.projects[project][key] + "\n")
 
     # ----------------------------------------------
     # ------------------ Reports -------------------

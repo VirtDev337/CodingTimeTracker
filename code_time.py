@@ -1,5 +1,6 @@
 import argparse
-import pkg.trackers as trackers
+from pkg.trackers import BrowserTracker
+from pkg.codetime import CodeTime
 import pkg.codetime_gui as gui
 import attempts.reports
 import psutil as util
@@ -8,7 +9,7 @@ from typing import List, Dict
 
 
 # Initialize CodeTime instance
-trackers = trackers.CodeTimeTracker()
+codetime = CodeTime()
 
 # Define command line arguments
 parser = argparse.ArgumentParser(
@@ -60,19 +61,34 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     if len(args) > 0:
-        if "help" in args or "h" in args:
-            trackers.help()
+        if ("help" in args or "h" in args):
+            codetime.help()
 
-        elif 'project' in args or 'p' in args and 'date' in args or 'd' in args and not 'r' in args or not 'remove' in args and not 's' in args or not 'status' in args:
-            trackers.date_project_report(args['date'], args['project'])
+        elif all(key in args for key in ['p', 'project', 'r', 'remove']):
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project']:
+                    codetime.delete_project(task)
+
+            else:
+                codetime.delete_project(args['project'])
+        elif all(key in args for key in ['p', 'project', 's', 'status']):
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project']:
+                    codetime.project_status(task)
+
+            else:
+                codetime.project_status(args['project'])
+
+        elif all(key in args for key in ['p', 'project', 'd', 'date']):
+            codetime.date_project_report(args['date'], args['project'])
 
         elif 'date' in args or 'd' in args:
-            trackers.date_report(args['date'])
+            codetime.date_report(args['date'])
 
         elif 'project' in args or 'p' in args:
-            trackers.project_report(args['project'])
+            codetime.project_report(args['project'])
 
-        trackers.start()
+        codetime.start()
 
     else:
         pass
