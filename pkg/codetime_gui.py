@@ -2,8 +2,10 @@ from pgi.repository import Gtk as gtk
 import pgi
 import pkg.trackers as trackers
 
-# GTK frontend
 pgi.require_version('Gtk', '3.0')
+
+
+# GTK frontend
 
 
 class MainWindow(gtk.Window):
