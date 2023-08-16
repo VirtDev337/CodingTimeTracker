@@ -1,6 +1,4 @@
 import argparse
-from pkg.trackers import CodeTimeTracker
-from pkg.codetime import CodeTime
 import os
 import time
 import psutil as util
@@ -8,14 +6,17 @@ import watchdog.events as events
 import watchdog.observers as observers
 
 from pathlib import Path
+from pkg.codetime_lib import CodeTime
 
 
 class VSCodeHandler(events.FileSystemEventHandler):
     def __init__(self, codetime):
-        self.codetime = CodeTime()
+        self.codetime = codetime
 
     def on_created(self, event):
-        project_name = os.path.basename(os.getcwd())
+        cwd = self.ide_process.cwd() if self.ide_process else os.getcwd()
+
+        project_name = os.path.basename(cwd)
 
         # Load existing project data from JSON file
         self.codetime.load_projects()
@@ -23,19 +24,8 @@ class VSCodeHandler(events.FileSystemEventHandler):
         # Check if project already exists
         project = self.codetime.get_project(project_name)
 
-        if project:
-            print('Resuming tracking for project:', project_name)
-
-        else:
-            print('Detected VSCode startup for project:', project_name)
-            project_name = input(
-                'Enter project name or press enter to use default (project directory):'
-            )
-
-            if not project_name:
-                project_name = os.path.basename(os.getcwd())
-
-            project = self.codetime.get_project(project_name)
+        if not project:
+            project = self.codetime.create_project(project_name)
 
         # Start tracking time spent in project
         project.add_time_spent(-project.start_time)
@@ -68,15 +58,31 @@ class FileModifiedHandler(events.FileSystemEventHandler):
         self.project = project
 
     def on_modified(self, event):
-        if not event.is_directory and event.src_path.startswith(self.project.name):
-            rel_path = os.path.relpath(event.src_path, self.project.name)
+        rel_path = None
 
+        if not event.is_directory and event.src_path.startswith(self.project.name):
+            rel_path = os.path.relpath(
+                event.src_path,
+                self.project.name
+            )
+        elif not event.is_directory and event.src_path.startswith(self.project.dir):
+            rel_path = os.path.relpath(
+                event.src_path,
+                self.project.dir
+            )
+
+        if rel_path:
             if rel_path not in self.project.modified_files:
                 self.project.modified_files.append(rel_path)
 
     def on_closed(self, event):
+        rel_path = None
+
         if not event.is_directory and event.src_path.startswith(self.project.name):
             rel_path = os.path.relpath(event.src_path, self.project.name)
+        elif not event.is_directory and event.src_path.startswith(self.project.dir):
+            rel_path = os.path.relpath(event.src_path, self.project.dir)
 
+        if rel_path:
             if rel_path in self.project.modified_files:
                 self.project.modified_files.remove(rel_path)
