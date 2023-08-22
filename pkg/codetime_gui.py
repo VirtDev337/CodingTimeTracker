@@ -1,8 +1,8 @@
-from pgi.repository import Gtk as gtk
 import pgi
 import pkg.trackers as trackers
 
 pgi.require_version('Gtk', '3.0')
+from pgi.repository import Gtk as gtk
 
 
 # GTK frontend
@@ -128,9 +128,9 @@ class ReportWindow(gtk.Window):
     def on_close_clicked(self, widget):
         self.destroy()
 
-
-win = MainWindow()
-win.connect("destroy", gtk.main_quit)
-win.show_all()
-gtk.main()
-pgi.require_version('Gtk', '3.0')
+if __name__ == '__main__':
+    win = MainWindow()
+    win.connect("destroy", gtk.main_quit)
+    win.show_all()
+    gtk.main()
+    pgi.require_version('Gtk', '3.0')
