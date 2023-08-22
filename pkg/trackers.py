@@ -1,11 +1,11 @@
 import json
 import os
 import time
+import codetime_lib as codetime
 
 
-class CodeTimeTracker:
+class CodeTimeTracker(codetime.CodeTime):
     def __init__(self):
-        self.projects = {}
         self.current_project = ""
         self.current_file = ""
         self.start_time = 0
@@ -22,10 +22,9 @@ class CodeTimeTracker:
     def end_project(self):
         end_time = time.time()
         elapsed_time = end_time - self.start_time
-        self.projects[self.current_project]["time"] += elapsed_time
 
-        with open(os.path.expanduser("~/codetime/projects.json"), "w") as file:
-            json.dump(self.projects, file, indent=4)
+        self.projects[self.current_project]["time"] += elapsed_time
+        self.save_projects()
 
         print(f"Stopped tracking project {self.current_project}")
 

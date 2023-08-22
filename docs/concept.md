@@ -25,26 +25,26 @@ When the IDE is running, it will get the project name, record the start time, re
 									L	-> urls
 
 ## Notes
-
+- Add log file to track application state and possible issues.
 ### FUNCTIONALITY
 
-- Add *complete* functionality
-- - Determines what can be skipped for tracking.
-- - Allows for storage of untracked projects for reports.
-- Add *remove* functionality
-- - Ability to delete old projects.
-- Add *status* functionality
-- - Display information for the project including complete, created, last modified and location
-- Add *verbose* functionality
-- - Whether detailed information of a project is displayed or reported.
+- [x] Add *complete* functionality
+- - [ ] Determines what can be skipped for tracking.
+- - [ ] Allows for storage of untracked projects for reports.
+- [x] Add *remove* functionality
+- - [x] Ability to delete old projects.
+- [x] Add *status* functionality
+- - [x] Display information for the project including complete, created, last modified and location
+- [x] Add *verbose* functionality
+- - [x] Whether detailed information of a project is displayed or reported.
 
 
 ### GUI
 
 - ct-gui -> on_start_clicked():
-- - Add check if VSCode is open.
-- - If report clicked, need to provide input window:
-- - - Determine if date or project is provided
-- - - If projects or all in input, show all projects (button maybe)
-- - - Short or Full report functionality
-- - - Populate project details
+- - [ ] Add check if VSCode is open.
+- - [ ] If report clicked, need to provide input window:
+- - - [ ] Determine if date or project is provided
+- - - [ ] If projects or all in input, show all projects (button maybe)
+- - - [ ] Short or Full report functionality
+- - - [ ] Populate project details

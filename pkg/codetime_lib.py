@@ -58,6 +58,7 @@ class CodeTime:
             "\n\nUsage:  code_time.py [-a | --argument]\n" +
             "\n\t-c --complete\tToggles projects status for active tracking.\n\t\t\tSeveral projects can be specified using a space delimited list in quotes.\n\t\t\ti.e.: \"codetime website tic-tac-toe-game\"" +
             "\n\n\t-d --date\tThe date used to create a summary report." +
+            "\n\n\t-g --gui\tStart the graphic user interface for Code Time." +
             "\n\n\t-h --help\tThis help message." +
             "\n\n\t-p --project\tThe name of the project to create a summary report.\nUsed with other arguments to define a single or 'list' of project(s) for that operation." +
             "\n\n\t-r --remove\tUsed in conjuction with '-p' to remove all data associated with the project(s) specified.\n\t\t\tSeveral projects can be specified using a space delimited list in quotes.\n\t\t\ti.e.: \"codetime react_extension calculator\"" +
@@ -106,7 +107,7 @@ class CodeTime:
         self.projects.delete(project)
 
     def save_projects(self):
-        projects = [p.to_dict() for p in self.projects.values()]
+        projects = [project.to_dict() for project in self.projects.values()]
         path = os.path.join(
             os.path.expanduser('~'),
             '.codetime',
@@ -135,6 +136,25 @@ class CodeTime:
         for key in project:
             if re.fullmatch(pattern, key):
                 print(key + ": " + self.projects[project][key] + "\n")
+
+    def get_datetime(self, datetime):
+        # Parse date/time
+        datetime_obj = None
+        time_step = None
+        try:
+            datetime_obj = datetime.strptime(datetime, '%Y-%m-%d')
+            time_step = timedelta(days=1)
+
+        except ValueError:
+            try:
+                datetime_obj = datetime.strptime(datetime, '%H:%M')
+                time_step = timedelta(minutes=60)
+
+            except ValueError:
+                print('Invalid date/time format, please use YYYY-MM-DD or HH:MM')
+                return
+
+        return datetime_obj, time_step
 
     # ----------------------------------------------
     # ------------------ Reports -------------------
@@ -192,19 +212,7 @@ class CodeTime:
         canvas.save()
 
     def date_report(self, date_time):
-        # Parse date/time
-        try:
-            datetime_obj = datetime.strptime(date_time, '%Y-%m-%d')
-            time_step = timedelta(days=1)
-
-        except ValueError:
-            try:
-                datetime_obj = datetime.strptime(date_time, '%H:%M')
-                time_step = timedelta(minutes=60)
-
-            except ValueError:
-                print('Invalid date/time format, please use YYYY-MM-DD or HH:MM')
-                return
+        datetime_obj, time_step = self.get_datetime(date_time)
 
         # Set up canvas
         c = canvas.Canvas(
@@ -248,18 +256,7 @@ class CodeTime:
         c.save()
 
     def date_project_report(self, date, project_name):
-        try:
-            datetime_obj = datetime.strptime(date, '%Y-%m-%d')
-            time_step = timedelta(days=1)
-
-        except ValueError:
-            try:
-                datetime_obj = datetime.strptime(date, '%H:%M')
-                time_step = timedelta(minutes=60)
-
-            except ValueError:
-                print('Invalid date/time format, please use YYYY-MM-DD or HH:MM')
-                return
+        datetime_obj, time_step = self.get_datetime(date)
 
         project = self.get_project(project_name)
         # Set up canvas
