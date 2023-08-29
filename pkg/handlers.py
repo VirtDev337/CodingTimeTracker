@@ -6,10 +6,9 @@ import watchdog.events as events
 import watchdog.observers as observers
 
 from pathlib import Path
-from pkg.codetime_lib import CodeTime
 
 
-class VSCodeHandler(events.FileSystemEventHandler):
+class IdeHandler(events.FileSystemEventHandler):
     def __init__(self, codetime):
         self.codetime = codetime
 
@@ -26,6 +25,8 @@ class VSCodeHandler(events.FileSystemEventHandler):
 
         if not project:
             project = self.codetime.create_project(project_name)
+
+        self.codetime.current_project = project_name
 
         # Start tracking time spent in project
         project.add_time_spent(-project.start_time)
@@ -84,5 +85,7 @@ class FileModifiedHandler(events.FileSystemEventHandler):
             rel_path = os.path.relpath(event.src_path, self.project.dir)
 
         if rel_path:
-            if rel_path in self.project.modified_files:
-                self.project.modified_files.remove(rel_path)
+            if rel_path not in self.project.modified_files:
+                self.project.modified_files.append(rel_path)
+
+        return self.project

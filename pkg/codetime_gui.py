@@ -123,7 +123,7 @@ class ReportWindow(gtk.Window):
     def on_generate_clicked(self, widget):
         project_name = self.project_entry.get_text()
         date_time = self.date_entry.get_text()
-        trackers.generate_report(project_name, date_time)
+        trackers.project_report(project_name, date_time)
 
     def on_close_clicked(self, widget):
         self.destroy()

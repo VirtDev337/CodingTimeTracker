@@ -1,51 +1,113 @@
-import time
+import json
 import psutil as util
 import platform
+import time
 
+from pathlib import Path
 
 class ProcMonitor:
-    def __init__(self, delay=1, applications=[]):
-        self.delay = delay
-        self.ide_apps = [
-            "code",
-            "codium",
-            "rstudio"
-        ]
+    def __init__(self, delay=5, ides=[], browsers=[]):
         self.active_ide_parent = ''
-        self.ide_pids = []
+        self.delay = delay
+        self.ides = [
+            'code',
+            'codium',
+            'rstudio'
+        ]
+        self.browsers = [
+            'Firefox',
+            'Google Chrome',
+            'Brave'
+        ]
+        self.current_ide = ''
+        self.current_browser = ''
 
-        if applications:
-            self.ide_apps.append(applications)
+        ide_cnt = 0
+        browser_cnt = 0
 
-    def ide_is_running(self):
-        for app in self.ide_apps:
-            for process in util.process_iter(attrs=['pid', 'name']):
-                if app.capitalize() in process.info['name'] or process.info['name'] == app.lower():
-                    self.ide_pids.append.process.pid()
+        conf_file = Path('~/.codetime/proc_config.json')
+        if conf_file.is_file():
+            ide_cnt, browser_cnt = self.load_conf()
 
-        if self.ide_pids:
-            self.get_ide_parent()
+        if ides:
+            self.ides.append(ides)
+
+        if browsers:
+            self.browsers.append(browsers)
+
+        if len(self.ides) > ide_cnt or len(self.browsers) > browser_cnt or not conf_file.is_file():
+            self.save_conf()
+
+
+    def load_conf(self, conf_file):
+            conf_obj = json.load(conf_file)
+            self.delay = conf_obj.delay
+            self.ides.append(conf_obj.ides)
+            self.browsers.append(conf_obj.browsers)
+            return len(self.ides), len(self.browsers)
+
+    def save_conf(self):
+        cfg_file = Path('~/.codetime/proc_conf.json')
+        cfg_obj = {}
+        cfg_obj['delay'] = self.delay
+        cfg_obj['ides'] = self.ides
+        cfg_obj['browsers'] = self.browsers
+
+        with open(cfg_file, 'w') as file:
+            json.dump(cfg_obj, file, default=str)
+
+    def detect_applications(self, program):
+        pids = []
+        previous_app = ''
+        app = ''
+        msg = '{program.upper}s' if 'i' in program else '{program}s'
+
+        for application in self['{program}s']:
+            app = application
+
+            if not pids:
+                pids = [
+                    process.info['pid'] for process in util.process_iter(attrs=['pid', 'name']) if process.info['name'] == application
+                ]
+                previous_app = application
+            else:
+                application = input(
+                    'At least two {msg} are running, {previous_app} and {application}, whcih would you like to track?'
+                )
+                pids = [
+                    process.info['pid'] for process in util.process_iter(attrs=['pid', 'name']) if process.info['name'] == application
+                ]
+                app = application
+                break
+
+        if pids:
+            self['current_{program}'] = app
+            self[self['current_{program}']]['pids'] = pids
+            if 'i' in program:
+                self.get_ide_parent()
             return True
 
         return False
 
     def get_ide_parent(self):
-        ide_process = ''
-
         # Iterate over the applications defined in the initilization of the ProcHandler
-        for pid in self.ide_pids:
+        for pid in self.ides[self.current_ide]['pids']:
             try:
                 process = util.Process(pid)
-                if not process.name.lower() in process.parent().name:
+                if not process.name in process.parent().name:
                     self.active_ide_parent = process
             except util.NoSuchProcess or util.AccessDenied as err:
                 print("There is a problem getting the parent process: " + err)
 
-    def monitor_ide_processes(self):
+    def monitor_processes(self):
         while not self.active_ide_parent:
-            if not self.ide_is_running():
+            if not self.detect_applications('ide'):
                 time.sleep(self.delay)
 
+
+    def save_config(self):
+        if self.ides:
+            pass
     # if __name__ == "__main__":
     #     monitoring_interval = 5  # seconds
     #     try:
@@ -81,18 +143,24 @@ class ProcessMonitor:
             'Google Chrome',
             'Brave'
         ]
-        browser_pids = []
+        pids = []
+        previous_browser = ''
+        net_browser = ''
 
-        if platform.system() == "Darwin":
-            browser_pids = [
-                p.info['pid'] for p in util.process_iter(
-                    attrs=['pid', 'name']) if p.info['name'] in browsers
-            ]
-        elif platform.system() == "Linux":
-            browser_pids = [
-                p.info['pid'] for p in util.process_iter(
-                    attrs=['pid', 'name']) if p.info['name'] in browsers]
+        for browser in self.browsers:
+            net_browser = browser
+            if not pids:
+                pids = [
+                    process.info['pid'] for process in util.process_iter(
+                        attrs=['pid', 'name']
+                    ) if process.info['name'] == browser
+                ]
+                previous_browser = browser
+            else:
+                browser = input(
+                    'At least two internet browsers are running, {previous_browser} and {browser}, whcih would you like to track?'
+                )
 
-        if browser_pids:
+        if pids:
             return True
         return False

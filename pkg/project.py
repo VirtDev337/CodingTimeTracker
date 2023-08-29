@@ -1,5 +1,6 @@
 import os
 from datetime import date, datetime
+from pkg.browser_lib import Browser
 
 
 class Project:
@@ -12,6 +13,7 @@ class Project:
         self.created = ""
         self.complete = False
         self.dir = os.path.basename(os.getcwd())
+        self.browser = Browser()
 
     def add_modified_file(self, path):
         self.modified_files.add(path)
@@ -34,5 +36,6 @@ class Project:
             'time_spent': self.time_spent,
             'last_modified_date': self.last_modified_date,
             'created': self.created,
-            'complete': self.complete
+            'complete': self.complete,
+            'browser': list(self.browser)
         }
