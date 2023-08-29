@@ -21,6 +21,7 @@ class CodeTime:
         self.projects_dir = ''
         self.verbose = False
         self.ide_process = process
+        self.current_project
 
     # ----------------------------------------------
     # ------------------ Observer ------------------
@@ -29,9 +30,9 @@ class CodeTime:
         observer = observers.Observer()
 
         # Watch for VSCode startup
-        vscode_handler = handlers.VSCodeHandler(self)
+        ide_handler = handlers.IdeHandler(self)
         observer.schedule(
-            vscode_handler,
+            ide_handler,
             os.path.expanduser('~'),
             recursive=True
         )
@@ -58,25 +59,21 @@ class CodeTime:
             "\n\nUsage:  code_time.py [-a | --argument]\n" +
             "\n\t-c --complete\tToggles projects status for active tracking.\n\t\t\tSeveral projects can be specified using a space delimited list in quotes.\n\t\t\ti.e.: \"codetime website tic-tac-toe-game\"" +
             "\n\n\t-d --date\tThe date used to create a summary report." +
+            "\n\n\t-D --delay\tThe interval between checks for an active IDE process (in seconds)." +
             "\n\n\t-g --gui\tStart the graphic user interface for Code Time." +
             "\n\n\t-h --help\tThis help message." +
             "\n\n\t-p --project\tThe name of the project to create a summary report.\nUsed with other arguments to define a single or 'list' of project(s) for that operation." +
             "\n\n\t-r --remove\tUsed in conjuction with '-p' to remove all data associated with the project(s) specified.\n\t\t\tSeveral projects can be specified using a space delimited list in quotes.\n\t\t\ti.e.: \"codetime react_extension calculator\"" +
             "\n\n\t-s --status\tUsed in conjuction with '-p' to display the status associated with the project specified." +
-            "\n\n\t-v --verbose\tToggles the inclusion of files modified and URL's visited for the project or date provided.\n\t\t\tThis is included by default with project reports, not with date reports.\n\t\t\tCombination report of both project and date also includes this by default.\n"
+            "\n\n\t-V --verbose\tToggles the inclusion of files modified and URL's visited for the project or date provided.\n\t\t\tThis is included by default with project reports, not with date reports.\n\t\t\tCombination report of both project and date also includes this by default.\n" +
+            "\n\n\t-v --version\tCodeTime's current version."
         )
 
     def toggle_complete(self):
-        if self.complete:
-            self.complete = False
-        else:
-            self.complete = True
+        self.projects[self.current_project].complete = False if self.projects[self.current_project].complete else True
 
     def toggle_verbose(self):
-        if self.verbose:
-            self.verbose = False
-        else:
-            self.verbose = True
+        self.verbose = False if self.verbose else True
 
     # ----------------------------------------------
     # ------------- Project Management -------------
@@ -113,8 +110,14 @@ class CodeTime:
             '.codetime',
             'projects.json'
         )
-        with open(path, 'w') as f:
-            json.dump(projects, f, default=str)
+
+        with open(path, 'w') as file:
+            json.dump(
+                projects,
+                file,
+                indent=4,
+                default=str
+            )
 
     def load_projects(self):
         path = os.path.join(
@@ -124,18 +127,6 @@ class CodeTime:
         )
         with open(path, 'r') as file:
             self.projects = json.load(file)
-
-    def project_status(self, project_name, verbose=False):
-        project = self.get_project(project_name)
-        print(project['name'] + "\n")
-        pattern = 'name|dir|created|complete'
-
-        if verbose:
-            pattern += '|date|time_spent|last_modified_date'
-
-        for key in project:
-            if re.fullmatch(pattern, key):
-                print(key + ": " + self.projects[project][key] + "\n")
 
     def get_datetime(self, datetime):
         # Parse date/time
@@ -155,6 +146,18 @@ class CodeTime:
                 return
 
         return datetime_obj, time_step
+
+    def project_status(self, project_name, verbose=False):
+        project = self.get_project(project_name)
+        print(project['name'] + "\n")
+        pattern = 'name|dir|created|complete'
+
+        if verbose:
+            pattern += '|date|time_spent|last_modified_date'
+
+        for key in project:
+            if re.fullmatch(pattern, key):
+                print(key + ": " + self.projects[project][key] + "\n")
 
     # ----------------------------------------------
     # ------------------ Reports -------------------

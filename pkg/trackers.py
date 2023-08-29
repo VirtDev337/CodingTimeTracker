@@ -1,10 +1,14 @@
 import json
 import os
+import re
 import time
-import codetime_lib as codetime
+from codetime_lib import CodeTime
+
+from urllib import parse
 
 
-class CodeTimeTracker(codetime.CodeTime):
+
+class CodeTimeTracker(CodeTime):
     def __init__(self):
         self.current_project = ""
         self.current_file = ""
@@ -43,49 +47,6 @@ class CodeTimeTracker(codetime.CodeTime):
 
             for file_path, file_count in project_data["files"].items():
                 print(f"    {file_path}: {file_count}")
-
-
-class BrowserTracker:
-    def __init__(self):
-        self.browsers = {
-            "Firefox": {},
-            "Chrome": {}
-        }
-        self.current_browser = ""
-        self.current_tab = ""
-        self.start_time = 0
-
-    def start_browser(self, browser_name: str):
-        self.current_browser = browser_name
-        self.browsers[self.current_browser] = {}
-        self.start_time = time.time()
-        print(f"Started tracking {self.current_browser}")
-
-    def end_browser(self):
-        end_time = time.time()
-        elapsed_time = end_time - self.start_time
-        if self.current_browser:
-
-            if self.current_tab not in self.browsers[self.current_browser]:
-                self.browsers[self.current_browser][self.current_tab] = 0
-
-            self.browsers[self.current_browser][self.current_tab] += elapsed_time
-
-            with open(os.path.expanduser("~/codetime/browsers.json"), "w") as file:
-                json.dump(self.browsers, file, indent=4)
-
-            print(f"Stopped tracking {self.current_browser}")
-
-    def update_tab(self, url: str):
-        if self.current_browser:
-            parsed_url = parse(url)
-            self.current_tab = parsed_url.netloc
-            self.start_time = time.time()
-
-    def print_browsers(self):
-        for browser_name, browser_data in self.browsers.items:
-            print(f"{browser_name}: {browser_data}")
-
 
 #     Use a Python package such as psutil to monitor running processes and detect when VSCode or a web browser is started.
     # When VSCode is started, record the current working directory as the project name, and prompt the user to confirm or edit the project name if desired.

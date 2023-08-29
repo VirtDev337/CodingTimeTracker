@@ -8,7 +8,7 @@ from pkg.trackers import BrowserTracker
 from pkg.codetime_lib import CodeTime
 from typing import List, Dict
 
-if __name__ == "__main__":
+def run():
     # Initialize CodeTime instance
     codetime = CodeTime()
 
@@ -16,6 +16,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog='codetime',
         description="\nCode Time records time spent in the IDE and internet browsers automatically.  It tracks the time spent and the project (directory by default) you are working in, the files modified and the URL's visited for research on your project."
+    )
+    parser.add_argument(
+        '-b',
+        '--browser',
+        type=str,
+        nargs='?',
+        help='Add the process name of a browser.\n(Firefox, Chrome and Brave are included).'
     )
     parser.add_argument(
         '-c',
@@ -31,6 +38,12 @@ if __name__ == "__main__":
         help='Generate PDF report for date/time (YYYY-MM-DD or HH:MM).\nCan be used in conjunction with -p to specify a time period of that project.'
     )
     parser.add_argument(
+        '-D',
+        '--delay',
+        type=str,
+        help='The interval between checks for an active IDE process (in seconds).'
+    )
+    parser.add_argument(
         '-g',
         '--gui',
         action='store_true',
@@ -43,6 +56,13 @@ if __name__ == "__main__":
     #     action=CodeTime().help(),
     #     help='This help message.'
     # )
+    parser.add_argument(
+        '-i',
+        '--ide',
+        type=str,
+        nargs='?',
+        help='Add the process name of an IDE.\n(VSCode, Codium and RStudio are included).'
+    )
     parser.add_argument(
         '-p',
         '--project',
@@ -66,7 +86,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '-V',
-        '--Verbose',
+        '--verbose',
         action='store_true',
         default=False,
         help='Used in conjuction with "-p" to display the status associated with the project specified.'
@@ -79,76 +99,79 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-
-    if __name__ == '__main__':
-        print(args)
-        if len(args) > 0:
-            if all(
-                    key in args for key in [
-                        'p',
-                        'r'
-                    ]
-                ) or all(
-                    key in args for key in [
-                        'project',
-                        'remove'
-                    ]
-            ):
-
-                if len(args['project'].split(" ")) > 1:
-                    for task in args['project']:
-                        codetime.delete_project(task)
-                else:
-                    codetime.delete_project(args['project'])
-            elif all(
+    print(args)
+    if len(args) > 0:
+        if all(
                 key in args for key in [
                     'p',
-                    's',
+                    'r'
                 ]
             ) or all(
                 key in args for key in [
                     'project',
-                    'status'
+                    'remove'
                 ]
-            ):
-                verbose = True if 'V' in args or 'Verbose' in args else False
+        ):
 
-                if len(args['project'].split(" ")) > 1:
-                    for task in args['project'].split(" "):
-                        codetime.project_status(task, verbose)
-                else:
-                    codetime.project_status(args['project'], verbose)
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project']:
+                    codetime.delete_project(task)
+            else:
+                codetime.delete_project(args['project'])
+        elif all(
+            key in args for key in [
+                'p',
+                's',
+            ]
+        ) or all(
+            key in args for key in [
+                'project',
+                'status'
+            ]
+        ):
+            verbose = True if 'V' in args or 'Verbose' in args else False
 
-            elif all(
-                key in args for key in [
-                    'p',
-                    'd',
-                ]
-            ) or all(
-                key in args for key in [
-                    'project',
-                    'date'
-                ]
-            ):
-                if len(args['project'].split(" ")) > 1:
-                    for task in args['project'].split(" "):
-                        codetime.date_project_report(args['date'], task)
-                else:
-                    codetime.date_project_report(args['date'], args['project'])
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project'].split(" "):
+                    codetime.project_status(task, verbose)
+            else:
+                codetime.project_status(args['project'], verbose)
 
-            elif 'date' in args or 'd' in args:
-                codetime.date_report(args['date'])
+        elif all(
+            key in args for key in [
+                'p',
+                'd',
+            ]
+        ) or all(
+            key in args for key in [
+                'project',
+                'date'
+            ]
+        ):
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project'].split(" "):
+                    codetime.date_project_report(args['date'], task)
+            else:
+                codetime.date_project_report(args['date'], args['project'])
 
-            elif 'project' in args or 'p' in args:
-                if len(args['project'].split(" ")) > 1:
-                    for task in args['project'].split(" "):
-                        codetime.project_report(task)
-                else:
-                    codetime.project_report(args['project'])
-            elif 'g' in args or 'gui' in args:
-                gui
+        elif 'date' in args or 'd' in args:
+            codetime.date_report(args['date'])
 
-            ide_mon.main()
+        elif 'project' in args or 'p' in args:
+            if len(args['project'].split(" ")) > 1:
+                for task in args['project'].split(" "):
+                    codetime.project_report(task)
+            else:
+                codetime.project_report(args['project'])
+        elif 'g' in args or 'gui' in args:
+            gui
             exit()
-        else:
-            codetime.start()
+
+        ide_mon.main()
+        exit()
+    else:
+        codetime.start()
+
+
+if __name__ == '__main__':
+    run()

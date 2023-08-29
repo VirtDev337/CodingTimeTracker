@@ -1,12 +1,12 @@
-from pkg.procs_monitor import ProcMonitor
 import codetime
+import daemon
 
+from pkg.procs_monitor import ProcMonitor
 
-def main():
+with daemon.DaemonContext():
     monitor = ProcMonitor()
     try:
-        monitor.monitor_ide_processes()
-        if monitor.active_ide_parent():
-            codetime
+        monitor.monitor_processes()
+        codetime.run()
     except:
         print("There was an error.  Check the logs for more information.")
