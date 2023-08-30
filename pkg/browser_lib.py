@@ -92,5 +92,5 @@ class Browser:
         return {
             'name': browser or self.current_browser,
             'time_spent': self.browsers[self.current_browser].elapsed_time,
-            'tabs': list(self.browsers[self.current_browser].tabs)
+            'tabs': dict(self.browsers[self.current_browser].tabs)
         }

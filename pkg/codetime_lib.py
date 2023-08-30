@@ -21,7 +21,7 @@ class CodeTime:
         self.projects_dir = ''
         self.verbose = False
         self.ide_process = process
-        self.current_project
+        self.current_project = ''
 
     # ----------------------------------------------
     # ------------------ Observer ------------------
@@ -153,7 +153,7 @@ class CodeTime:
         pattern = 'name|dir|created|complete'
 
         if verbose:
-            pattern += '|date|time_spent|last_modified_date'
+            pattern += '|date|time_spent|last_modified_date|browser'
 
         for key in project:
             if re.fullmatch(pattern, key):
