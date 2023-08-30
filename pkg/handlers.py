@@ -26,7 +26,7 @@ class IdeHandler(events.FileSystemEventHandler):
         if not project:
             project = self.codetime.create_project(project_name)
 
-        self.codetime.current_project = project_name
+        self.codetime.current_project = project.name
 
         # Start tracking time spent in project
         project.add_time_spent(-project.start_time)
@@ -44,7 +44,7 @@ class IdeHandler(events.FileSystemEventHandler):
         observer.start()
 
     def on_closed(self, event, project_name=os.getcwd()):
-        if os.path.basename(event.src_path) == self.project.name:
+        if os.path.basename(event.src_path) == self.project.name or os.path.basename(event.src_path) == self.project.dir:
             project = self.codetime.get_project(project_name)
             project.add_time_spent(time.time() - project.start_time)
             project.update_last_modified(project.date)

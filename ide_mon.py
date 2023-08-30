@@ -7,6 +7,7 @@ with daemon.DaemonContext():
     monitor = ProcMonitor()
     try:
         monitor.monitor_processes()
-        codetime.run()
-    except:
-        print("There was an error.  Check the logs for more information.")
+        if monitor.current_ide:
+            codetime.run()
+    except Exception as err:
+        print("There was an error:\n{err}.")

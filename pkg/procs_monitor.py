@@ -1,12 +1,13 @@
 import json
 import psutil as util
 import platform
+import re
 import time
 
 from pathlib import Path
 
 class ProcMonitor:
-    def __init__(self, delay=5, ides=[], browsers=[]):
+    def __init__(self, delay=5):
         self.active_ide_parent = ''
         self.delay = delay
         self.ides = [
@@ -22,12 +23,13 @@ class ProcMonitor:
         self.current_ide = ''
         self.current_browser = ''
 
+    def on_created(self, ides=[], browsers=[]):
         ide_cnt = 0
         browser_cnt = 0
 
         conf_file = Path('~/.codetime/proc_config.json')
         if conf_file.is_file():
-            ide_cnt, browser_cnt = self.load_conf()
+            ide_cnt, browser_cnt = self.load_conf(conf_file)
 
         if ides:
             self.ides.append(ides)
@@ -37,7 +39,6 @@ class ProcMonitor:
 
         if len(self.ides) > ide_cnt or len(self.browsers) > browser_cnt or not conf_file.is_file():
             self.save_conf()
-
 
     def load_conf(self, conf_file):
             conf_obj = json.load(conf_file)
@@ -50,8 +51,16 @@ class ProcMonitor:
         cfg_file = Path('~/.codetime/proc_conf.json')
         cfg_obj = {}
         cfg_obj['delay'] = self.delay
-        cfg_obj['ides'] = self.ides
-        cfg_obj['browsers'] = self.browsers
+
+        for ide in self.ides:
+            coded = "code|codium|rstudio"
+            if not re.match(coded, ide):
+                cfg_obj['ides'].append(ide)
+
+        for browser in self.browsers:
+            coded = "firefox|chrome|brave"
+            if not re.match(coded, browser):
+                cfg_obj['browsers'].append(browser)
 
         with open(cfg_file, 'w') as file:
             json.dump(cfg_obj, file, default=str)
@@ -60,7 +69,7 @@ class ProcMonitor:
         pids = []
         previous_app = ''
         app = ''
-        msg = '{program.upper}s' if 'i' in program else '{program}s'
+        msg = '{program.upper}s' if 'ide' in program else '{program}s'
 
         for application in self['{program}s']:
             app = application
@@ -83,7 +92,7 @@ class ProcMonitor:
         if pids:
             self['current_{program}'] = app
             self[self['current_{program}']]['pids'] = pids
-            if 'i' in program:
+            if 'ide' in program:
                 self.get_ide_parent()
             return True
 
@@ -104,10 +113,6 @@ class ProcMonitor:
             if not self.detect_applications('ide'):
                 time.sleep(self.delay)
 
-
-    def save_config(self):
-        if self.ides:
-            pass
     # if __name__ == "__main__":
     #     monitoring_interval = 5  # seconds
     #     try:
