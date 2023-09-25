@@ -5,6 +5,7 @@ import psutil as util
 import watchdog.events as events
 import watchdog.observers as observers
 
+from ide_mon import monitor
 from pathlib import Path
 
 
@@ -30,7 +31,7 @@ class IdeHandler(events.FileSystemEventHandler):
 
         # Start tracking time spent in project
         project.add_time_spent(-project.start_time)
-        project.start_time = time.time()
+        project['start_time'] = time.time()
         project.update_created(project.date)
 
         # Watch for file modifications
@@ -51,7 +52,7 @@ class IdeHandler(events.FileSystemEventHandler):
             self.codetime.save_projects()
         # TODO: Is this the best way?
         self.codetime.stop()
-        self.codetime.start()
+        monitor()
 
 
 class FileModifiedHandler(events.FileSystemEventHandler):

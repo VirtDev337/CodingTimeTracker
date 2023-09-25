@@ -6,6 +6,8 @@ import time
 
 from pathlib import Path
 
+
+
 class ProcMonitor:
     def __init__(self, delay=5):
         self.active_ide_parent = ''
@@ -24,12 +26,12 @@ class ProcMonitor:
         self.current_browser = ''
 
     def on_created(self, ides=[], browsers=[]):
-        ide_cnt = 0
-        browser_cnt = 0
+        ide_count = 0
+        browser_count = 0
 
         conf_file = Path('~/.codetime/proc_config.json')
         if conf_file.is_file():
-            ide_cnt, browser_cnt = self.load_conf(conf_file)
+            ide_count, browser_count = self.load_conf(conf_file)
 
         if ides:
             self.ides.append(ides)
@@ -37,7 +39,7 @@ class ProcMonitor:
         if browsers:
             self.browsers.append(browsers)
 
-        if len(self.ides) > ide_cnt or len(self.browsers) > browser_cnt or not conf_file.is_file():
+        if len(self.ides) > ide_count or len(self.browsers) > browser_count or not conf_file.is_file():
             self.save_conf()
 
     def load_conf(self, conf_file):
@@ -69,7 +71,7 @@ class ProcMonitor:
         pids = []
         previous_app = ''
         app = ''
-        msg = '{program.upper}s' if 'ide' in program else '{program}s'
+        msg = '{program.upper}s' if 'ide' in program else '{program.title}s'
 
         for application in self['{program}s']:
             app = application
@@ -79,7 +81,7 @@ class ProcMonitor:
                     process.info['pid'] for process in util.process_iter(attrs=['pid', 'name']) if process.info['name'] == application
                 ]
                 previous_app = application
-            else:
+            elif pids and previous_app == application:
                 application = input(
                     'At least two {msg} are running, {previous_app} and {application}, whcih would you like to track?'
                 )
