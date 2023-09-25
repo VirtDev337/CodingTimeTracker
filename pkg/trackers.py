@@ -49,9 +49,15 @@ class CodeTimeTracker(CodeTime):
                 print(f"    {file_path}: {file_count}")
 
 #     Use a Python package such as psutil to monitor running processes and detect when VSCode or a web browser is started.
-    # When VSCode is started, record the current working directory as the project name, and prompt the user to confirm or edit the project name if desired.
-    # Use watchdog to monitor file system events in the project directory and track modified files.
-    # Record the time spent in VSCode using the time package, and store this information in a class object.
-    # When VSCode is closed, write the class object to a JSON file in the ~/codetime directory.
-    # Repeat steps 1-5 for the web browser.
-    # Accept command-line arguments to run the program as a service and to generate PDF reports by project or date/time.
+
+# When VSCode is started, record the current working directory as the project name, and prompt the user to confirm or edit the project name if desired.
+
+# Use watchdog to monitor file system events in the project directory and track modified files.
+
+# Record the time spent in VSCode using the time package, and store this information in a class object.
+
+# When VSCode is closed, write the class object to a JSON file in the ~/codetime directory.
+
+# Repeat steps 1-5 for the web browser.
+
+# Accept command-line arguments to run the program as a service and to generate PDF reports by project or date/time.

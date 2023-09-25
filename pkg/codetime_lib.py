@@ -55,7 +55,7 @@ class CodeTime:
     # ----------------------------------------------
     def help():
         print(
-            "\nCode Time records time spent in the IDE and internet browsers automatically.  It tracks the time spent and the project (directory by default) you are working in, the files modified and the URL's visited for research on your project." +
+            "\nCode Time records time spent in the IDE and internet browsers automatically.  It tracks the time spent and the project (named the directory by default) you are working in, the files modified and the URL's visited for research on your project." +
             "\n\nUsage:  code_time.py [-a | --argument]\n" +
             "\n\t-c --complete\tToggles projects status for active tracking.\n\t\t\tSeveral projects can be specified using a space delimited list in quotes.\n\t\t\ti.e.: \"codetime website tic-tac-toe-game\"" +
             "\n\n\t-d --date\tThe date used to create a summary report." +
@@ -150,7 +150,7 @@ class CodeTime:
     def project_status(self, project_name, verbose=False):
         project = self.get_project(project_name)
         print(project['name'] + "\n")
-        pattern = 'name|dir|created|complete'
+        pattern = 'dir|created|complete'
 
         if verbose:
             pattern += '|date|time_spent|last_modified_date|browser'

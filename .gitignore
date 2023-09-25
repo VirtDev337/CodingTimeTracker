@@ -1,0 +1,4 @@
+attempts/*
+__pycache__
+venv/*
+.vscode/*
