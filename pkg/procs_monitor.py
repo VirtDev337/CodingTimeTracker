@@ -3,6 +3,7 @@ import psutil as util
 import platform
 import re
 import time
+import os
 
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from pathlib import Path
 
 class ProcMonitor:
     def __init__(self, delay=5):
+        self.active_codetime = False
         self.active_ide_parent = ''
         self.delay = delay
         self.ides = [
@@ -29,7 +31,11 @@ class ProcMonitor:
         ide_count = 0
         browser_count = 0
 
-        conf_file = Path('~/.codetime/proc_config.json')
+        conf_file = Path(
+            os.path.expanduser('~'),
+            '.codetime',
+            'proc_config.json'
+        )
         if conf_file.is_file():
             ide_count, browser_count = self.load_conf(conf_file)
 
@@ -50,7 +56,11 @@ class ProcMonitor:
             return len(self.ides), len(self.browsers)
 
     def save_conf(self):
-        cfg_file = Path('~/.codetime/proc_conf.json')
+        cfg_file = Path(
+            os.path.expanduser('~'),
+            '.codetime',
+            'proc_config.json'
+        )
         cfg_obj = {}
         cfg_obj['delay'] = self.delay
 
@@ -67,7 +77,7 @@ class ProcMonitor:
         with open(cfg_file, 'w') as file:
             json.dump(cfg_obj, file, default=str)
 
-    def detect_applications(self, program):
+    def detect_application(self, program):
         pids = []
         previous_app = ''
         app = ''
@@ -81,7 +91,7 @@ class ProcMonitor:
                     process.info['pid'] for process in util.process_iter(attrs=['pid', 'name']) if process.info['name'] == application
                 ]
                 previous_app = application
-            elif pids and previous_app == application:
+            elif pids and application == previous_app:
                 application = input(
                     'At least two {msg} are running, {previous_app} and {application}, whcih would you like to track?'
                 )
@@ -97,7 +107,6 @@ class ProcMonitor:
             if 'ide' in program:
                 self.get_ide_parent()
             return True
-
         return False
 
     def get_ide_parent(self):
@@ -112,8 +121,9 @@ class ProcMonitor:
 
     def monitor_processes(self):
         while not self.active_ide_parent:
-            if not self.detect_applications('ide'):
+            if not self.detect_application('ide'):
                 time.sleep(self.delay)
+        return self
 
     # if __name__ == "__main__":
     #     monitoring_interval = 5  # seconds
