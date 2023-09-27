@@ -1,14 +1,15 @@
-import codetime
+import pkg.codetime_gui as codetime_gui
+import codetime_cli as codetime_cli
 import daemon
 
 from pkg.procs_monitor import ProcMonitor
 
-def monitor():
+def monitor(default='gui'):
     with daemon.DaemonContext():
         monitor = ProcMonitor()
         try:
             monitor.monitor_processes()
-            if monitor.current_ide:
-                codetime.run()
+            codetime_{default}
         except Exception as err:
             print("There was an error:\n{err}.")
+
