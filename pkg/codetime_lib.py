@@ -22,6 +22,7 @@ class CodeTime:
         self.verbose = False
         self.ide_process = process
         self.current_project = ''
+        self.browsers = []
 
     # ----------------------------------------------
     # ------------------ Observer ------------------
@@ -49,6 +50,7 @@ class CodeTime:
     def stop(self, observer=observers.Observer()):
         observer.stop()
         observer.join()
+        self.save_projects()
 
     # ----------------------------------------------
     # -------------- Argument Handler --------------
@@ -86,7 +88,11 @@ class CodeTime:
         if designation:
             name = designation
 
-        return Project(name)
+        self.current_project = Project(name)
+
+    def create_gproject(self, name):
+        print('Detected VSCode startup for project:', name)
+        self.current_project = Project(name)
 
     def get_project(self, name):
         if name not in self.projects:
@@ -96,7 +102,7 @@ class CodeTime:
             'Resuming tracking for project:',
             self.projects['name']
         )
-        return self.projects[name]
+        self.current_project = self.projects[name]
 
     def delete_project(self, project_name):
         project = self.get_project(project_name)

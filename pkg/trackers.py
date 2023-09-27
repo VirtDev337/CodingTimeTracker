@@ -10,17 +10,15 @@ from urllib import parse
 
 class CodeTimeTracker(CodeTime):
     def __init__(self):
-        self.current_project = ""
         self.current_file = ""
         self.start_time = 0
 
-    def start_project(self, project_name: str):
-        self.current_project = project_name
+    def start_project(self, start_time):
         self.projects[self.current_project] = {
             "files": {},
             "time": 0
         }
-        self.start_time = time.time()
+        self.start_time = start_time
         print(f"Started tracking project {self.current_project}")
 
     def end_project(self):

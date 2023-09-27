@@ -4,14 +4,16 @@ import platform
 import re
 import time
 import os
+import subprocess
 
 from pathlib import Path
 
 
 
 class ProcMonitor:
-    def __init__(self, delay=5):
+    def __init__(self, delay=5, interf='gui'):
         self.active_codetime = False
+        self.default_interface = interf
         self.active_ide_parent = ''
         self.delay = delay
         self.ides = [
@@ -77,6 +79,22 @@ class ProcMonitor:
         with open(cfg_file, 'w') as file:
             json.dump(cfg_obj, file, default=str)
 
+    def detect_codetime(self):
+        for process in util.process_iter(attrs=['pid', 'name']):
+            if 'codetime' in process.info['name']:
+                return True
+        return False
+
+    def get_ide_parent(self):
+        # Iterate over the applications defined in the initilization of the ProcHandler
+        for pid in self.ides[self.current_ide]['pids']:
+            try:
+                process = util.Process(pid)
+                if not process.name in process.parent().name:
+                    self.active_ide_parent = process
+            except util.NoSuchProcess or util.AccessDenied as err:
+                print("There is a problem getting the parent process: " + err)
+
     def detect_application(self, program):
         pids = []
         previous_app = ''
@@ -100,7 +118,7 @@ class ProcMonitor:
                 ]
                 app = application
                 break
-
+        self.active_codetime = self.detect_codetime()
         if pids:
             self['current_{program}'] = app
             self[self['current_{program}']]['pids'] = pids
@@ -109,21 +127,21 @@ class ProcMonitor:
             return True
         return False
 
-    def get_ide_parent(self):
-        # Iterate over the applications defined in the initilization of the ProcHandler
-        for pid in self.ides[self.current_ide]['pids']:
-            try:
-                process = util.Process(pid)
-                if not process.name in process.parent().name:
-                    self.active_ide_parent = process
-            except util.NoSuchProcess or util.AccessDenied as err:
-                print("There is a problem getting the parent process: " + err)
-
     def monitor_processes(self):
         while not self.active_ide_parent:
-            if not self.detect_application('ide'):
+            active = False
+            for ide in self.ides:
+                if self.detect_application(ide):
+                    active = True
+
+            if not active:
                 time.sleep(self.delay)
-        return self
+
+    def on_ide_start(self):
+        if not self.active_codetime:
+            subprocess.run('python3', 'bin/codetime_{self.default_interface}.py', )
+        # TODO: Pass current IDE and any Browser information to codetime_gui/cli.py.  Convert the objects to dictionary (text) or save the info to a cache file and load it from codetime_ application.
+
 
     # if __name__ == "__main__":
     #     monitoring_interval = 5  # seconds
@@ -131,53 +149,3 @@ class ProcMonitor:
     #         monitor_ide_processes(monitoring_interval)
     #     except KeyboardInterrupt:
     #         print("Monitoring stopped.")
-
-
-class ProcessMonitor:
-    def __init__(self):
-        pass
-
-    def monitor_apps(self):
-        while True:
-            if self.detect_vscode():
-                self.on_vscode_start()
-            if self.detect_browser():
-                self.on_browser_start()
-            time.sleep(self.monitor_interval)
-
-    def detect_vscode(self):
-        ide_pids = [
-            p.info['pid'] for p in util.process_iter(
-                attrs=['pid', 'name']) if p.info['name'] == 'code']
-        if ide_pids:
-            self.ide_pids = ide_pids
-            return True
-        return False
-
-    def detect_browser(self):
-        browsers = [
-            'Firefox',
-            'Google Chrome',
-            'Brave'
-        ]
-        pids = []
-        previous_browser = ''
-        net_browser = ''
-
-        for browser in self.browsers:
-            net_browser = browser
-            if not pids:
-                pids = [
-                    process.info['pid'] for process in util.process_iter(
-                        attrs=['pid', 'name']
-                    ) if process.info['name'] == browser
-                ]
-                previous_browser = browser
-            else:
-                browser = input(
-                    'At least two internet browsers are running, {previous_browser} and {browser}, whcih would you like to track?'
-                )
-
-        if pids:
-            return True
-        return False
