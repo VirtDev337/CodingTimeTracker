@@ -1,5 +1,9 @@
 import pgi
 import pkg.trackers as trackers
+import codetime_lib as CT
+import ide_mon as Monitor
+import os
+import time
 
 pgi.require_version('Gtk', '3.0')
 from pgi.repository import Gtk as gtk
@@ -60,14 +64,25 @@ class MainWindow(gtk.Window):
         # Add grid to window
         self.add(grid)
 
+
     def on_start_clicked(self, widget):
-        project_name = self.project_entry.get_text()
-        start_time = self.start_time_entry.get_text()
-        end_time = self.end_time_entry.get_text()
+        project_name = self.project_entry.get_text(display = os.getcwd())
+        start_time = self.start_time_entry.get_text(display = time.time()) or time.time()
+        # end_time = self.end_time_entry.get_text()
+
+        codetime = CT.Codetime()
+        codetime.load_projects()
+        codetime.get_project(project_name)
+
+        if not codetime.current_project:
+            codetime.create_gproject(project_name)
+
+        codetime.ide_process = Monitor.monitor().current_ide
+
         trackers.start_project(
             project_name,
             start_time,
-            end_time
+            # end_time
         )
 
     def on_stop_clicked(self, widget):
