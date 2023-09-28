@@ -91,7 +91,7 @@ class ProcMonitor:
             try:
                 process = util.Process(pid)
                 if not process.name in process.parent().name:
-                    self.active_ide_parent = process
+                    self.active_ide_parent = { process.name: pid}
             except util.NoSuchProcess or util.AccessDenied as err:
                 print("There is a problem getting the parent process: " + err)
 
@@ -121,7 +121,7 @@ class ProcMonitor:
         self.active_codetime = self.detect_codetime()
         if pids:
             self['current_{program}'] = app
-            self[self['current_{program}']]['pids'] = pids
+            self[app]['pids'] = pids
             if 'ide' in program:
                 self.get_ide_parent()
             return True
@@ -139,9 +139,28 @@ class ProcMonitor:
 
     def on_ide_start(self):
         if not self.active_codetime:
-            subprocess.run('python3', 'bin/codetime_{self.default_interface}.py', )
+            # TODO: Create cache_monitor method
+            self.cache_monitor()
+            subprocess.call(
+                'python3',
+                'bin/codetime_{self.default_interface}.py',
+                )
         # TODO: Pass current IDE and any Browser information to codetime_gui/cli.py.  Convert the objects to dictionary (text) or save the info to a cache file and load it from codetime_ application.
 
+    def on_ide_close(self):
+        pass # TODO: save browser info in codetime object.
+
+    def to_dict(self):
+        return {
+            'ide': {
+                'name': self.current_ide,
+                'pids': self[self.current_ide]['pids']
+            },
+            'browser': {
+                'name': self.current_browser,
+                'pids': self[self.current_browser]['pids']
+            }
+        }
 
     # if __name__ == "__main__":
     #     monitoring_interval = 5  # seconds
