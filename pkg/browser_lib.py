@@ -20,7 +20,7 @@ class Browser:
             'start_time': 0,
             'end_time': 0,
             'elapsed_time': 0,
-            'tabs': set()
+            'tabs': {}
         }
         self.browsers[self.current_browser].start_time = time.time()
         self.update_tab()
@@ -88,9 +88,13 @@ class Browser:
         for browser_name, browser_data in self.browsers.items:
             print(f"{browser_name}: {browser_data}")
 
-    def to_dict(self, browser):
+    def to_dict(self, browser=None):
         return {
-            'name': browser or self.current_browser,
-            'time_spent': self.browsers[self.current_browser].elapsed_time,
-            'tabs': dict(self.browsers[self.current_browser].tabs)
+            time.strftime('%x', time.localtime()): {
+                browser or self.current_browser: {
+                    'name': browser or self.current_browser,
+                    'time_spent': self.browsers[self.current_browser].elapsed_time,
+                    'tabs': dict(self.browsers[self.current_browser].tabs)
+                }
+            }
         }

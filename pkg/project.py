@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import date, datetime
 from pkg.browser_lib import Browser
 
@@ -31,11 +32,13 @@ class Project:
     def to_dict(self):
         return {
             'name': self.name,
-            'directory': self.dir,
-            'modified_files': list(self.modified_files),
-            'time_spent': self.time_spent,
-            'last_modified_date': self.last_modified_date,
             'created': self.created,
             'complete': self.complete,
-            'browser': list(self.browser)
+            'dir': self.dir,
+            'time_spent': self.time_spent,
+            'last_modified_date': self.last_modified_date,
+            self.date: {
+                'modified_files': list(self.modified_files),
+                'browser': dict(self.browser.to_dict())
+            }
         }

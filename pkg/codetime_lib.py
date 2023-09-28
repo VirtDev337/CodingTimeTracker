@@ -72,7 +72,7 @@ class CodeTime:
         )
 
     def toggle_complete(self):
-        self.projects[self.current_project].complete = False if self.projects[self.current_project].complete else True
+        self.projects[self.current_project]['complete'] = False if self.projects[self.current_project]['complete'] else True
 
     def toggle_verbose(self):
         self.verbose = False if self.verbose else True
@@ -88,7 +88,8 @@ class CodeTime:
         if designation:
             name = designation
 
-        self.current_project = Project(name)
+        self.projects[name] = Project(name)
+        self.current_project = name
 
     def create_gproject(self, name):
         print('Detected VSCode startup for project:', name)
@@ -110,7 +111,12 @@ class CodeTime:
         self.projects.delete(project)
 
     def save_projects(self):
-        projects = [project.to_dict() for project in self.projects.values()]
+        converted_projects = {}
+        # projects = [project.to_dict() for project in self.projects.values()]
+        for project in self.projects:
+            if date.today() in self.projects[project]:
+                converted_projects[project.name] =  project.to_dict()
+
         path = os.path.join(
             os.path.expanduser('~'),
             '.codetime',
@@ -119,7 +125,7 @@ class CodeTime:
 
         with open(path, 'w') as file:
             json.dump(
-                projects,
+                converted_projects,
                 file,
                 indent=4,
                 default=str
@@ -156,13 +162,13 @@ class CodeTime:
     def project_status(self, project_name, verbose=False):
         project = self.get_project(project_name)
         print(project['name'] + "\n")
-        pattern = 'dir|created|complete'
+        pattern = 'dir|created|complete|last_modified_date|time_spent'
 
         if verbose:
-            pattern += '|date|time_spent|last_modified_date|browser'
+            pattern += '|(/d+[/-|//]/d+[/-|//]/d+)|modified_files|browser'
 
         for key in project:
-            if re.fullmatch(pattern, key):
+            if re.match(pattern, key):
                 print(key + ": " + self.projects[project][key] + "\n")
 
     # ----------------------------------------------
