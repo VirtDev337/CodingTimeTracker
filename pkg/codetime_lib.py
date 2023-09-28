@@ -165,7 +165,7 @@ class CodeTime:
         pattern = 'dir|created|complete|last_modified_date|time_spent'
 
         if verbose:
-            pattern += '|(/d+[/-|//]/d+[/-|//]/d+)|modified_files|browser'
+            pattern += '|(/d+/-/d+/-/d+)|modified_files|browser'
 
         for key in project:
             if re.match(pattern, key):
