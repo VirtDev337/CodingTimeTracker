@@ -1,8 +1,8 @@
 import argparse
-import pkg.codetime_gui as gui
-import attempts.reports
+import gui
+# import attempts.reports
 import psutil as util
-import ide_mon
+import src.CodeTime.mon as mon
 
 from pkg.trackers import BrowserTracker
 from pkg.codetime_lib import CodeTime
@@ -118,6 +118,7 @@ def run():
                     codetime.delete_project(task)
             else:
                 codetime.delete_project(args['project'])
+
         elif all(
             key in args for key in [
                 'p',
@@ -164,12 +165,11 @@ def run():
             else:
                 codetime.project_report(args['project'])
         elif 'g' in args or 'gui' in args:
+            codetime.stop()
             gui
             exit()
-
-        ide_mon.main()
-        exit()
     else:
+        codetime.ide_process = mon.main()
         codetime.start()
 
 

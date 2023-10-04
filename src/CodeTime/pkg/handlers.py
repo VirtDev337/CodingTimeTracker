@@ -5,7 +5,7 @@ import psutil as util
 import watchdog.events as events
 import watchdog.observers as observers
 
-from ide_mon import monitor
+from src.CodeTime.mon import monitor
 from pathlib import Path
 
 

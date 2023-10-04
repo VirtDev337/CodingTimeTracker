@@ -90,7 +90,7 @@ class Browser:
 
     def to_dict(self, browser=None):
         return {
-            time.strftime('%x', time.localtime()): {
+            time.strftime('%Y-%m-%d', time.localtime()): {
                 browser or self.current_browser: {
                     'name': browser or self.current_browser,
                     'time_spent': self.browsers[self.current_browser].elapsed_time,

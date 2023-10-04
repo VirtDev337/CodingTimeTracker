@@ -2,7 +2,7 @@ import json
 import os
 import re
 import time
-from codetime_lib import CodeTime
+from pkg.codetime_lib import CodeTime
 
 from urllib import parse
 
@@ -10,15 +10,16 @@ from urllib import parse
 
 class CodeTimeTracker(CodeTime):
     def __init__(self):
+        super(CodeTimeTracker, self).__init__()
         self.current_file = ""
         self.start_time = 0
 
-    def start_project(self, start_time):
+    def start_project(self, start_time=time.time()):
         self.projects[self.current_project] = {
-            "files": {},
             "time": 0
         }
         self.start_time = start_time
+        self.start()
         print(f"Started tracking project {self.current_project}")
 
     def end_project(self):
@@ -33,10 +34,10 @@ class CodeTimeTracker(CodeTime):
     def update_file(self, file_path: str):
         if self.current_project:
 
-            if file_path not in self.projects[self.current_project]["files"]:
-                self.projects[self.current_project]["files"][file_path] = 0
+            if file_path not in self.projects[self.current_project]["modifie_files"]:
+                self.projects[self.current_project]["modified_files"][file_path] = 0
 
-            self.projects[self.current_project]["files"][file_path] += 1
+            self.projects[self.current_project]["modified_files"][file_path] += 1
             self.current_file = file_path
 
     def print_projects(self):

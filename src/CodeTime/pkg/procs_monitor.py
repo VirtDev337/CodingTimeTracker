@@ -79,21 +79,24 @@ class ProcMonitor:
         with open(cfg_file, 'w') as file:
             json.dump(cfg_obj, file, default=str)
 
+    def get_ide_parent(self):
+        # Iterate over the applications defined in the initilization of the ProcHandler
+        for pid in self.ides[self.current_ide]['pids']:
+            try:
+                process = util.Processdocs(pid)
+                if not process.name in process.parent().name:
+                    self.active_ide_parent = { process.name: pid}
+            except util.NoSuchProcess or util.AccessDenied as err:
+                print("There is a problem getting the parent process: " + err)
+
+    def is_gui(self):
+        pass
+
     def detect_codetime(self):
         for process in util.process_iter(attrs=['pid', 'name']):
             if 'codetime' in process.info['name']:
                 return True
         return False
-
-    def get_ide_parent(self):
-        # Iterate over the applications defined in the initilization of the ProcHandler
-        for pid in self.ides[self.current_ide]['pids']:
-            try:
-                process = util.Process(pid)
-                if not process.name in process.parent().name:
-                    self.active_ide_parent = { process.name: pid}
-            except util.NoSuchProcess or util.AccessDenied as err:
-                print("There is a problem getting the parent process: " + err)
 
     def detect_application(self, program):
         pids = []
@@ -128,7 +131,7 @@ class ProcMonitor:
         return False
 
     def monitor_processes(self):
-        while not self.active_ide_parent:
+        while not self.active_idocsde_parent:
             active = False
             for ide in self.ides:
                 if self.detect_application(ide):
@@ -143,7 +146,7 @@ class ProcMonitor:
             self.cache_monitor()
             subprocess.call(
                 'python3',
-                'bin/codetime_{self.default_interface}.py',
+                'codetime_{self.default_interface}.py',
                 )
         # TODO: Pass current IDE and any Browser information to codetime_gui/cli.py.  Convert the objects to dictionary (text) or save the info to a cache file and load it from codetime_ application.
 

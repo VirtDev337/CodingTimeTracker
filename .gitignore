@@ -2,3 +2,5 @@ attempts/*
 __pycache__
 venv/*
 .vscode/*
+.gitignore
+.prettierignore

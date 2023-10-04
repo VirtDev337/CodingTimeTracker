@@ -1,5 +1,5 @@
-import pkg.codetime_gui as codetime_gui
-import codetime_cli as codetime_cli
+import gui
+import cli
 import daemon
 import subprocess
 

@@ -1,19 +1,22 @@
 import handlers
 import json
 import os
+import sys
 import time
 import re
 import watchdog.observers as observers
 
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from project import Project
+from pkg.project import Project
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter, landscape, portrait
 from reportlab.lib import colors
-from trackers import BrowserTracker
+from pkg.trackers import BrowserTracker
 
+path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
+sys.path.insert(0, path)
 
 class CodeTime:
     def __init__(self, process=None):
@@ -105,6 +108,9 @@ class CodeTime:
         )
         self.current_project = self.projects[name]
 
+    def gget_or_create_project(self, name):
+        pass
+
     def delete_project(self, project_name):
         project = self.get_project(project_name)
         # Delete project on disk? shutil.rmtree?
@@ -165,7 +171,7 @@ class CodeTime:
         pattern = 'dir|created|complete|last_modified_date|time_spent'
 
         if verbose:
-            pattern += '|(/d+[/-|//]/d+[/-|//]/d+)|modified_files|browser'
+            pattern += '|(/d+/-/d+/-/d+)|modified_files|browser'
 
         for key in project:
             if re.match(pattern, key):

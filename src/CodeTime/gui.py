@@ -1,13 +1,17 @@
 import pgi
-import pkg.trackers as trackers
-import codetime_lib as CT
-import ide_mon as Monitor
+import sys
+import src.CodeTime.mon as Monitor
 import os
 import time
+
+from pkg.trackers import CodeTimeTracker as Tracker
+from pathlib import Path
 
 pgi.require_version('Gtk', '3.0')
 from pgi.repository import Gtk as gtk
 
+path = str(Path(Path(__file__).parent.absolute()).parent.absolute())
+sys.path.insert(0, path)
 
 # GTK frontend
 
@@ -70,7 +74,7 @@ class MainWindow(gtk.Window):
         start_time = self.start_time_entry.get_text(display = time.time()) or time.time()
         # end_time = self.end_time_entry.get_text()
 
-        codetime = CT.Codetime()
+        codetime = Tracker()
         codetime.load_projects()
         codetime.get_project(project_name)
 
@@ -80,7 +84,6 @@ class MainWindow(gtk.Window):
         codetime.ide_process = Monitor.monitor().current_ide
 
         trackers.start_project(
-            project_name,
             start_time,
             # end_time
         )
