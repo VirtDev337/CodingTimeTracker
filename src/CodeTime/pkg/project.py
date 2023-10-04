@@ -7,7 +7,7 @@ from pkg.browser_lib import Browser
 class Project:
     def __init__(self, name):
         self.name = name
-        self.modified_files = set()
+        self.modified_files = {}
         self.time_spent = 0
         self.date = date.today()
         self.last_modified_date = ""

@@ -1,8 +1,8 @@
 import argparse
-import pkg.codetime_gui as gui
-import attempts.reports
+import gui
+# import attempts.reports
 import psutil as util
-import ide_mon
+import src.CodeTime.mon as mon
 
 from pkg.trackers import BrowserTracker
 from pkg.codetime_lib import CodeTime
@@ -169,7 +169,7 @@ def run():
             gui
             exit()
     else:
-        codetime.ide_process = ide_mon.main()
+        codetime.ide_process = mon.main()
         codetime.start()
 
 
